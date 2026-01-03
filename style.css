@@ -1,31 +1,9 @@
+/* style.css */
 body {
-  font-family: Arial, sans-serif;
-  padding: 20px;
-  background: #f8f9fa;
+  font-family: Arial, sans-serif; /* optional override */
+  background-color: #f8f9fa;
 }
 
-h2 {
-  text-align: center;
-}
-
-.btn {
-  display: block;
-  padding: 15px;
-  margin: 15px 0;
-  text-align: center;
-  text-decoration: none;
-  color: #fff;
-  background: #0d6efd;
-  border-radius: 8px;
-  font-size: 18px;
-}
-
-.btn.green {
-  background: #198754;
-}
-
-.note {
-  text-align: center;
-  font-size: 14px;
-  color: #555;
+.input-field {
+  @apply w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400;
 }
