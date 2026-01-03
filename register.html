@@ -2,142 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Patient Registration</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Tailwind -->
+  <title>Register Patient</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Choices.js -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
-
-  <style>
-    .choices__inner {
-      border-radius: 0.5rem !important;
-      border-color: #d1d5db !important;
-      min-height: 44px;
-    }
-  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 </head>
-
 <body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
 
-<div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
-  <h2 class="text-2xl font-bold mb-4 text-center">
-    Bedridden Patient Registration
-  </h2>
+<div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-lg animate__animated animate__fadeIn">
+  <h2 class="text-2xl font-bold mb-4 text-center text-gray-800">Bedridden Patient Registration</h2>
 
   <form id="regForm" class="space-y-3" onsubmit="event.preventDefault(); registerPatient();">
 
-    <input id="national_id" required
-      class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400"
-      placeholder="National ID *">
-
-    <input id="full_name" required
-      class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400"
-      placeholder="Full Name *">
-
-    <input type="date" id="dob"
-      class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400">
-
-    <select id="sex"
-      class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400">
+    <input class="input-field" type="text" id="national_id" placeholder="National ID *" required>
+    <input class="input-field" type="text" id="full_name" placeholder="Full Name *" required>
+    <input class="input-field" type="date" id="dob" placeholder="Date of Birth">
+    <select class="input-field" id="sex">
       <option value="">Select Sex</option>
       <option>Male</option>
       <option>Female</option>
     </select>
+    <textarea class="input-field" id="address" placeholder="Address"></textarea>
+    <input class="input-field" type="text" id="island" placeholder="Island">
+    <input class="input-field" type="tel" id="contact" placeholder="Contact Number">
+    <input class="input-field" type="text" id="caregiver_name" placeholder="Caregiver Name">
+    <input class="input-field" type="tel" id="caregiver_contact" placeholder="Caregiver Contact">
+    <textarea class="input-field" id="remarks" placeholder="Remarks"></textarea>
 
-    <textarea id="address"
-      class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400"
-      placeholder="Address"></textarea>
-
-    <input id="island"
-      class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400"
-      placeholder="Island">
-
-    <input type="tel" id="contact"
-      class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400"
-      placeholder="Contact Number">
-
-    <input id="caregiver_name"
-      class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400"
-      placeholder="Caregiver Name">
-
-    <input type="tel" id="caregiver_contact"
-      class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400"
-      placeholder="Caregiver Contact">
-
-    <textarea id="remarks"
-      class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400"
-      placeholder="Remarks"></textarea>
-
-    <!-- Registered By -->
-    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
-      Registered By
-    </label>
-    <select id="registered_by" required>
-      <option value="">Loading staff...</option>
-    </select>
-
-    <button type="submit"
-      class="bg-blue-600 text-white py-2 px-4 rounded w-full hover:bg-blue-700 transition">
+    <button class="bg-blue-600 text-white py-2 px-4 rounded w-full hover:bg-blue-700 transition" type="submit">
       Register Patient
     </button>
 
-    <p id="status" class="text-center text-sm mt-2"></p>
+    <p id="status" class="text-center mt-2 text-sm"></p>
   </form>
 </div>
 
 <script>
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxmcWZi7YlMySKKbBhKkhUh3Ynj1LuVMV0o7YlgcTCrp8AA4pDypJs4XZWWi2dLn7Mq/exec";
-const STAFF_API_URL = "https://script.google.com/macros/s/AKfycbyaBLAkJtS1lH0uJXZxmpLoHwb6kM51lQWyMuLlvDGXIdfovZhl8ag3MnMDL_aeq-oGmA/exec";
-const HCF_FILTER = "SHAH-PHU";
 
-let staffChoices;
-
-/* Load staff list */
-async function loadStaff() {
-  const select = document.getElementById("registered_by");
-
-  try {
-    const res = await fetch(STAFF_API_URL);
-    const data = await res.json();
-    const filtered = data.filter(s => s.Hcf === HCF_FILTER);
-
-    let html = '<option value="">Select Staff</option>';
-    filtered.forEach(s => {
-      const name = s["Staff Name and Designation"];
-      html += `<option value="${name}">${name}</option>`;
-    });
-    html += '<option value="not_in_list">+ Register New</option>';
-
-    select.innerHTML = html;
-
-    staffChoices = new Choices(select, {
-      searchEnabled: true,
-      shouldSort: false,
-      itemSelectText: ''
-    });
-
-    select.addEventListener("change", () => {
-      if (select.value === "not_in_list") {
-        window.open(
-          `https://shaviyanipublichealth.blogspot.com/p/register-new.html?hcf=${encodeURIComponent(HCF_FILTER)}`,
-          "Register",
-          "width=800,height=600"
-        );
-        staffChoices.setChoiceByValue("");
-      }
-    });
-
-  } catch {
-    select.innerHTML = '<option value="">Error loading staff</option>';
-  }
-}
-
-/* Register patient */
-function registerPatient() {
+async function registerPatient() {
   const payload = {
     action: "registerPatient",
     national_id: national_id.value.trim(),
@@ -149,38 +52,45 @@ function registerPatient() {
     contact: contact.value,
     caregiver_name: caregiver_name.value,
     caregiver_contact: caregiver_contact.value,
-    remarks: remarks.value,
-    registered_by: registered_by.value
+    remarks: remarks.value
   };
 
-  fetch(GAS_URL, {
-    method: "POST",
-    body: JSON.stringify(payload)
-  })
-  .then(r => r.json())
-  .then(res => {
-    if (res.status === "exists") {
-      status.textContent = "⚠ Patient already registered";
-      status.className = "text-red-600 text-center text-sm";
+  try {
+    const res = await fetch(GAS_URL, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      status.innerText = `❌ ${data.error}`;
+      status.className = "text-red-500 text-center mt-2";
       return;
     }
 
-    status.textContent = "✅ Patient registered successfully";
-    status.className = "text-green-600 text-center text-sm";
-    regForm.reset();
-    staffChoices.removeActiveItems();
+    if (data.status === "exists") {
+      status.innerText = "⚠ Patient already registered.";
+      status.className = "text-yellow-500 text-center mt-2";
+      return;
+    }
 
-    setTimeout(() => location.href = "index.html", 1500);
-  })
-  .catch(() => {
-    status.textContent = "❌ Network error";
-    status.className = "text-red-600 text-center text-sm";
-  });
+    status.innerText = "✅ Patient registered successfully!";
+    status.className = "text-green-500 text-center mt-2";
+    document.getElementById("regForm").reset();
+    setTimeout(()=> window.location.href="index.html",1500);
+
+  } catch (err) {
+    status.innerText = "❌ Network error. Data not sent.";
+    status.className = "text-red-500 text-center mt-2";
+  }
 }
-
-/* Init */
-loadStaff();
 </script>
+
+<style>
+.input-field {
+  @apply w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400;
+}
+</style>
 
 </body>
 </html>
