@@ -86,12 +86,37 @@ function registerPatient() {
   .then(r => r.json())
   .then(res => {
     if (res.status === "exists") {
-      status.innerText = "Patient already registered.";
-    } else {
-      status.innerText = "Patient registered successfully.";
+      status.innerText = "⚠ Patient already registered.";
+      return;
     }
+
+    status.innerText = "✅ Patient registered successfully.";
+
+    // 1️⃣ Reset form
+    document.querySelector("form")?.reset();
+    clearFields();
+
+    // 2️⃣ Go to home page
+    setTimeout(() => {
+      window.location.href = "index.html";
+    }, 1500);
   })
-  .catch(() => status.innerText = "Network error");
+  .catch(() => {
+    status.innerText = "❌ Network error. Data not sent.";
+  });
+}
+
+function clearFields() {
+  national_id.value = "";
+  full_name.value = "";
+  dob.value = "";
+  sex.value = "";
+  address.value = "";
+  island.value = "";
+  contact.value = "";
+  caregiver_name.value = "";
+  caregiver_contact.value = "";
+  remarks.value = "";
 }
 </script>
 
