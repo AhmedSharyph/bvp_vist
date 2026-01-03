@@ -2,77 +2,214 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <title>Bedridden Patient App</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bedridden Patient Dashboard</title>
+  
+  <!-- TailwindCSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  
+  <!-- Choices.js for searchable dropdown -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start py-10">
 
-  <!-- Header -->
-  <header class="bg-white shadow p-4 flex justify-between items-center">
-    <h1 class="text-xl font-bold text-gray-800">Bedridden Patient Dashboard</h1>
-    <div id="userEmail" class="text-gray-500 text-sm">Loading...</div>
-  </header>
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="w-full max-w-md bg-white p-6 rounded-lg shadow-lg">
+  <h2 class="text-2xl font-bold mb-4 text-center">Login</h2>
+  <input type="email" id="email" placeholder="Enter your email" class="w-full p-2 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400">
+  <button class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition" onclick="login()">Login</button>
+  <p id="loginStatus" class="mt-2 text-center text-sm text-red-500"></p>
+</div>
 
-  <!-- Main Content -->
-  <main class="flex-1 p-6">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- APP SCREEN -->
+<div id="appScreen" class="hidden w-full max-w-3xl">
 
-      <!-- Register Patient Card -->
-      <a href="register.html" class="group bg-white p-6 rounded-xl shadow hover:shadow-xl transition transform hover:-translate-y-1 animate__animated animate__fadeIn">
-        <div class="flex flex-col items-center justify-center">
-          <svg class="w-12 h-12 text-blue-500 mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-          </svg>
-          <h2 class="text-lg font-semibold text-gray-800 mb-2">Register Patient</h2>
-          <p class="text-gray-500 text-sm text-center">Add a new bedridden patient to the system.</p>
-        </div>
-      </a>
+  <p id="welcome" class="mb-4 text-center font-semibold text-lg"></p>
 
-      <!-- Add Visit Card -->
-      <a href="visit.html" class="group bg-white p-6 rounded-xl shadow hover:shadow-xl transition transform hover:-translate-y-1 animate__animated animate__fadeIn animate__delay-1s">
-        <div class="flex flex-col items-center justify-center">
-          <svg class="w-12 h-12 text-green-500 mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m2 6H7m10-6V7a2 2 0 00-2-2H9a2 2 0 00-2 2v5"/>
-          </svg>
-          <h2 class="text-lg font-semibold text-gray-800 mb-2">Add Visit</h2>
-          <p class="text-gray-500 text-sm text-center">Record a new nurse, doctor, or non-routine visit.</p>
-        </div>
-      </a>
+  <!-- REGISTRATION FORM (admin only) -->
+  <div id="regFormContainer" class="bg-white p-6 rounded-lg shadow-lg mb-6 hidden">
+    <h2 class="text-xl font-bold mb-4 text-center">Register Patient</h2>
+    <form id="regForm" class="space-y-3" onsubmit="event.preventDefault(); registerPatient();">
+      <input class="input-field" type="text" id="national_id" placeholder="National ID *" required>
+      <input class="input-field" type="text" id="full_name" placeholder="Full Name *" required>
+      <input class="input-field" type="date" id="dob" placeholder="Date of Birth">
+      <select class="input-field" id="sex">
+        <option value="">Select Sex</option>
+        <option>Male</option>
+        <option>Female</option>
+      </select>
+      <textarea class="input-field" id="address" placeholder="Address"></textarea>
+      <input class="input-field" type="text" id="island" placeholder="Island">
+      <input class="input-field" type="tel" id="contact" placeholder="Contact Number">
+      <input class="input-field" type="text" id="caregiver_name" placeholder="Caregiver Name">
+      <input class="input-field" type="tel" id="caregiver_contact" placeholder="Caregiver Contact">
+      <textarea class="input-field" id="remarks" placeholder="Remarks"></textarea>
 
-      <!-- View Patients Card -->
-      <a href="patients.html" class="group bg-white p-6 rounded-xl shadow hover:shadow-xl transition transform hover:-translate-y-1 animate__animated animate__fadeIn animate__delay-2s">
-        <div class="flex flex-col items-center justify-center">
-          <svg class="w-12 h-12 text-purple-500 mb-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A12.06 12.06 0 0112 15a12.06 12.06 0 016.879 2.804M12 12a5 5 0 100-10 5 5 0 000 10z"/>
-          </svg>
-          <h2 class="text-lg font-semibold text-gray-800 mb-2">View Patients</h2>
-          <p class="text-gray-500 text-sm text-center">Search and view all registered patients in the system.</p>
-        </div>
-      </a>
+      <button class="bg-green-600 text-white py-2 px-4 rounded w-full hover:bg-green-700 transition" type="submit">Register Patient</button>
+      <p id="regStatus" class="text-center mt-2 text-sm"></p>
+    </form>
+  </div>
 
-    </div>
-  </main>
+  <!-- VISIT FORM (all roles) -->
+  <div id="visitFormContainer" class="bg-white p-6 rounded-lg shadow-lg">
+    <h2 class="text-xl font-bold mb-4 text-center">Patient Visit</h2>
+    <form id="visitForm" class="space-y-3" onsubmit="event.preventDefault(); saveVisit();">
+      <select class="input-field" id="patient" required></select>
+      <select class="input-field" id="visit_type" required>
+        <option>Nurse Visit</option>
+        <option>Doctor Visit</option>
+        <option>Non-Routine Visit</option>
+      </select>
+      <textarea class="input-field" id="findings" placeholder="Findings"></textarea>
+      <textarea class="input-field" id="actions_taken" placeholder="Actions Taken"></textarea>
+      <input class="input-field" type="date" id="next_visit_date" placeholder="Next Visit Date">
+      <button class="bg-blue-600 text-white py-2 px-4 rounded w-full hover:bg-blue-700 transition" type="submit">Save Visit</button>
+      <p id="visitStatus" class="text-center mt-2 text-sm"></p>
+    </form>
+  </div>
+</div>
 
-  <!-- Footer -->
-  <footer class="bg-white shadow p-4 text-center text-gray-400 text-sm">
-    &copy; 2026 Health Facility. All rights reserved.
-  </footer>
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbzUWmegnOFm4foJzs3QlHpBcWc_Ptu_Cxz-ev2nQPxVVqbjKWdvOXD1hMo9EQcXZ3gk/exec";
+let currentUser = null;
+let patientChoices = null;
+let db;
 
-  <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxmcWZi7YlMySKKbBhKkhUh3Ynj1LuVMV0o7YlgcTCrp8AA4pDypJs4XZWWi2dLn7Mq/exec";
+// Initialize IndexedDB
+function initDB() {
+  const request = indexedDB.open("BedriddenVisitsDB", 1);
+  request.onupgradeneeded = e => {
+    db = e.target.result;
+    if (!db.objectStoreNames.contains("visits")) {
+      db.createObjectStore("visits", { keyPath: "id", autoIncrement: true });
+    }
+  };
+  request.onsuccess = e => { db = e.target.result; syncOfflineVisits(); };
+  request.onerror = e => console.error("IndexedDB error", e);
+}
 
-    // Display logged-in user email
-    const userEmailEl = document.getElementById('userEmail');
-    fetch(GAS_URL + "?action=getCurrentUser")
-      .then(r => r.json())
-      .then(data => {
-        if (data.email) userEmailEl.innerText = `Logged in as: ${data.email}`;
-        else userEmailEl.innerText = '';
-      })
-      .catch(()=> userEmailEl.innerText = '');
-  </script>
+// LOGIN
+async function login() {
+  const email = document.getElementById("email").value.trim();
+  if (!email) return;
+  try {
+    const res = await fetch(`${API_URL}?action=getUser&email=${email}`);
+    const data = await res.json();
+    if (!data || data.active !== "YES") {
+      document.getElementById("loginStatus").innerText = "Access denied or inactive user";
+      return;
+    }
+    currentUser = data;
+    document.getElementById("loginScreen").classList.add("hidden");
+    document.getElementById("appScreen").classList.remove("hidden");
+    document.getElementById("welcome").innerText = `Welcome, ${data.email} (${data.role})`;
 
+    if (data.role === "admin") document.getElementById("regFormContainer").classList.remove("hidden");
+    await loadPatients();
+    initDB();
+  } catch (err) {
+    document.getElementById("loginStatus").innerText = "Error connecting to server";
+    console.error(err);
+  }
+}
+
+// LOAD PATIENTS
+async function loadPatients() {
+  try {
+    const res = await fetch(`${API_URL}?action=getPatients`);
+    const data = await res.json();
+    const sel = document.getElementById("patient");
+    sel.innerHTML = '<option value="">Select Patient</option>';
+    data.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p.national_id;
+      opt.text = `${p.full_name} (${p.national_id})`;
+      sel.appendChild(opt);
+    });
+    if (patientChoices) patientChoices.destroy();
+    patientChoices = new Choices(sel, { searchEnabled: true, itemSelectText: '' });
+  } catch (err) { console.error(err); }
+}
+
+// REGISTER PATIENT
+async function registerPatient() {
+  const payload = {
+    action: "registerPatient",
+    national_id: national_id.value.trim(),
+    full_name: full_name.value.trim(),
+    dob: dob.value,
+    sex: sex.value,
+    address: address.value,
+    island: island.value,
+    contact: contact.value,
+    caregiver_name: caregiver_name.value,
+    caregiver_contact: caregiver_contact.value,
+    remarks: remarks.value
+  };
+  try {
+    const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (data.status === "exists") { regStatus.innerText = "⚠ Patient already registered"; return; }
+    regStatus.innerText = "✅ Patient registered successfully!";
+    regForm.reset();
+    await loadPatients();
+  } catch (err) { regStatus.innerText = "❌ Network error"; console.error(err); }
+}
+
+// SAVE VISIT
+async function saveVisit() {
+  const payload = {
+    action: "addVisit",
+    national_id: patient.value,
+    visit_type: visit_type.value,
+    findings: findings.value,
+    actions_taken: actions_taken.value,
+    next_visit_date: next_visit_date.value
+  };
+  if (navigator.onLine) {
+    // online
+    try {
+      const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+      const data = await res.json();
+      visitStatus.innerText = "✅ Visit saved successfully!";
+      visitForm.reset();
+    } catch (err) { visitStatus.innerText = "❌ Network error"; saveVisitOffline(payload); }
+  } else {
+    saveVisitOffline(payload);
+  }
+}
+
+// SAVE OFFLINE
+function saveVisitOffline(payload) {
+  const tx = db.transaction("visits", "readwrite");
+  tx.objectStore("visits").add({ ...payload, timestamp: new Date().toISOString() });
+  visitStatus.innerText = "⚠ Offline: Visit saved locally. Will sync later.";
+  visitForm.reset();
+}
+
+// SYNC OFFLINE VISITS
+function syncOfflineVisits() {
+  const tx = db.transaction("visits", "readonly");
+  const store = tx.objectStore("visits");
+  store.getAll().onsuccess = async e => {
+    const visits = e.target.result;
+    for (const v of visits) {
+      try {
+        await fetch(API_URL, { method: "POST", body: JSON.stringify(v) });
+        const txDel = db.transaction("visits", "readwrite");
+        txDel.objectStore("visits").delete(v.id);
+      } catch (err) { console.warn("Failed to sync visit", v); }
+    }
+  };
+}
+
+// SYNC WHEN BACK ONLINE
+window.addEventListener("online", syncOfflineVisits);
+</script>
+
+<style>
+.input-field { @apply w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400; }
+</style>
 </body>
 </html>
