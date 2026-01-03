@@ -1,57 +1,45 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Patient Visit</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <style>
-    body { font-family: Arial; padding: 15px; background: #f8f9fa; }
-    h2 { text-align: center; }
-    label { font-weight: bold; margin-top: 10px; display: block; }
-    input, select, textarea, button {
-      width: 100%; padding: 10px; margin-top: 5px; font-size: 16px;
-    }
-    button {
-      background: #198754; color: white; border: none;
-      margin-top: 15px; border-radius: 6px;
-    }
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
 
-<body>
+<div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+  <h2 class="text-2xl font-bold mb-4 text-center">Patient Visit</h2>
 
-<h2>Patient Visit</h2>
+  <form id="visitForm" class="space-y-3" onsubmit="event.preventDefault(); saveVisit();">
 
-<label>Select Patient</label>
-<select id="patient"></select>
+    <select class="input-field" id="patient" required>
+      <option value="">Select Patient</option>
+    </select>
 
-<label>Visit Type</label>
-<select id="visit_type">
-  <option>Nurse Visit</option>
-  <option>Doctor Visit</option>
-  <option>Non-Routine Visit</option>
-</select>
+    <select class="input-field" id="visit_type" required>
+      <option>Nurse Visit</option>
+      <option>Doctor Visit</option>
+      <option>Non-Routine Visit</option>
+    </select>
 
-<label>Findings</label>
-<textarea id="findings"></textarea>
+    <textarea class="input-field" id="findings" placeholder="Findings"></textarea>
+    <textarea class="input-field" id="actions_taken" placeholder="Actions Taken"></textarea>
+    <input class="input-field" type="date" id="next_visit_date" placeholder="Next Visit Date">
+    <input class="input-field" type="text" id="entered_by" placeholder="Staff Name">
 
-<label>Actions Taken</label>
-<textarea id="actions_taken"></textarea>
+    <button class="bg-green-600 text-white py-2 px-4 rounded w-full hover:bg-green-700 transition" type="submit">
+      Save Visit
+    </button>
 
-<label>Next Visit Date</label>
-<input type="date" id="next_visit_date">
-
-<label>Entered By</label>
-<input id="entered_by" placeholder="Staff name">
-
-<button onclick="saveVisit()">Save Visit</button>
-
-<p id="status"></p>
+    <p id="status" class="text-center mt-2 text-sm"></p>
+  </form>
+</div>
 
 <script>
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz_TizFmrdtTFslZdHydEaBXhqOkANnNH-NKBWISnlbeCMvZyRecjeCl1wXZpqQYOu1/exec";
 
+// Load patients dropdown
 function loadPatients() {
   fetch(GAS_URL + "?action=getPatients")
     .then(r => r.json())
@@ -62,7 +50,8 @@ function loadPatients() {
         opt.text = p.full_name + " (" + p.national_id + ")";
         patient.appendChild(opt);
       });
-    });
+    })
+    .catch(() => status.innerText = "⚠ Could not load patients.");
 }
 
 function saveVisit() {
@@ -81,12 +70,31 @@ function saveVisit() {
     body: JSON.stringify(payload)
   })
   .then(r => r.json())
-  .then(() => status.innerText = "Visit saved successfully.")
-  .catch(() => status.innerText = "Network error");
+  .then(() => {
+    status.innerText = "✅ Visit saved successfully!";
+    status.classList.add("text-green-500");
+
+    // Reset form
+    document.getElementById("visitForm").reset();
+
+    // Optional: redirect to home after 1.5s
+    setTimeout(() => window.location.href = "index.html", 1500);
+  })
+  .catch(() => {
+    status.innerText = "❌ Network error. Data not sent.";
+    status.classList.add("text-red-500");
+  });
 }
 
+// Initialize
 loadPatients();
 </script>
+
+<style>
+.input-field {
+  @apply w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400;
+}
+</style>
 
 </body>
 </html>
