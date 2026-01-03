@@ -4,42 +4,84 @@
   <meta charset="UTF-8">
   <title>Patient Visit</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
 
-<div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Choices.js -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+  <style>
+    .choices__inner {
+      border-radius: 0.5rem !important;
+      border-color: #d1d5db !important;
+      min-height: 44px;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+
+<div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
   <h2 class="text-2xl font-bold mb-4 text-center">Patient Visit</h2>
 
   <form id="visitForm" class="space-y-3" onsubmit="event.preventDefault(); saveVisit();">
 
-    <select class="input-field" id="patient" required>
+    <!-- Patient -->
+    <select id="patient" required
+      class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400">
       <option value="">Select Patient</option>
     </select>
 
-    <select class="input-field" id="visit_type" required>
+    <!-- Visit Type -->
+    <select id="visit_type" required
+      class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400">
       <option>Nurse Visit</option>
       <option>Doctor Visit</option>
       <option>Non-Routine Visit</option>
     </select>
 
-    <textarea class="input-field" id="findings" placeholder="Findings"></textarea>
-    <textarea class="input-field" id="actions_taken" placeholder="Actions Taken"></textarea>
-    <input class="input-field" type="date" id="next_visit_date" placeholder="Next Visit Date">
-    <input class="input-field" type="text" id="entered_by" placeholder="Staff Name">
+    <!-- Findings -->
+    <textarea id="findings" rows="3"
+      class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400"
+      placeholder="Findings"></textarea>
 
-    <button class="bg-green-600 text-white py-2 px-4 rounded w-full hover:bg-green-700 transition" type="submit">
+    <!-- Actions -->
+    <textarea id="actions_taken" rows="3"
+      class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400"
+      placeholder="Actions Taken"></textarea>
+
+    <!-- Next Visit -->
+    <input type="date" id="next_visit_date"
+      class="w-full p-2 border rounded focus:ring-2 focus:ring-blue-400">
+
+    <!-- Entered By -->
+    <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide">
+      Entered By
+    </label>
+    <select id="entered_by" required>
+      <option value="">Loading staff...</option>
+    </select>
+
+    <!-- Submit -->
+    <button type="submit"
+      class="bg-green-600 text-white py-2 px-4 rounded w-full hover:bg-green-700 transition">
       Save Visit
     </button>
 
-    <p id="status" class="text-center mt-2 text-sm"></p>
+    <p id="status" class="text-center text-sm mt-2"></p>
   </form>
 </div>
 
 <script>
 const GAS_URL = "https://script.google.com/macros/s/AKfycbz_TizFmrdtTFslZdHydEaBXhqOkANnNH-NKBWISnlbeCMvZyRecjeCl1wXZpqQYOu1/exec";
+const STAFF_API_URL = "https://script.google.com/macros/s/AKfycbyaBLAkJtS1lH0uJXZxmpLoHwb6kM51lQWyMuLlvDGXIdfovZhl8ag3MnMDL_aeq-oGmA/exec";
+const HCF_FILTER = "SHAH-PHU";
 
-// Load patients dropdown
+let staffChoices;
+
+/* Load patients */
 function loadPatients() {
   fetch(GAS_URL + "?action=getPatients")
     .then(r => r.json())
@@ -47,13 +89,49 @@ function loadPatients() {
       data.forEach(p => {
         const opt = document.createElement("option");
         opt.value = p.national_id;
-        opt.text = p.full_name + " (" + p.national_id + ")";
+        opt.textContent = `${p.full_name} (${p.national_id})`;
         patient.appendChild(opt);
       });
     })
-    .catch(() => status.innerText = "⚠ Could not load patients.");
+    .catch(() => status.textContent = "⚠ Could not load patients");
 }
 
+/* Load staff */
+async function loadStaff() {
+  const select = document.getElementById("entered_by");
+  const res = await fetch(STAFF_API_URL);
+  const data = await res.json();
+
+  const filtered = data.filter(s => s.Hcf === HCF_FILTER);
+
+  let html = '<option value="">Select Staff</option>';
+  filtered.forEach(s => {
+    const name = s["Staff Name and Designation"];
+    html += `<option value="${name}">${name}</option>`;
+  });
+  html += '<option value="not_in_list">+ Register New</option>';
+
+  select.innerHTML = html;
+
+  staffChoices = new Choices(select, {
+    searchEnabled: true,
+    shouldSort: false,
+    itemSelectText: ''
+  });
+
+  select.addEventListener("change", () => {
+    if (select.value === "not_in_list") {
+      window.open(
+        `https://shaviyanipublichealth.blogspot.com/p/register-new.html?hcf=${encodeURIComponent(HCF_FILTER)}`,
+        "Register",
+        "width=800,height=600"
+      );
+      staffChoices.setChoiceByValue("");
+    }
+  });
+}
+
+/* Save visit */
 function saveVisit() {
   const payload = {
     action: "addVisit",
@@ -71,30 +149,22 @@ function saveVisit() {
   })
   .then(r => r.json())
   .then(() => {
-    status.innerText = "✅ Visit saved successfully!";
-    status.classList.add("text-green-500");
-
-    // Reset form
-    document.getElementById("visitForm").reset();
-
-    // Optional: redirect to home after 1.5s
-    setTimeout(() => window.location.href = "index.html", 1500);
+    status.textContent = "✅ Visit saved successfully";
+    status.className = "text-green-600 text-center text-sm";
+    visitForm.reset();
+    staffChoices.removeActiveItems();
+    setTimeout(() => location.href = "index.html", 1500);
   })
   .catch(() => {
-    status.innerText = "❌ Network error. Data not sent.";
-    status.classList.add("text-red-500");
+    status.textContent = "❌ Network error";
+    status.className = "text-red-600 text-center text-sm";
   });
 }
 
-// Initialize
+/* Init */
 loadPatients();
+loadStaff();
 </script>
-
-<style>
-.input-field {
-  @apply w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400;
-}
-</style>
 
 </body>
 </html>
