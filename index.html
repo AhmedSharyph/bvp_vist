@@ -4,31 +4,28 @@
   <meta charset="UTF-8">
   <title>Bedridden Patient App</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+
   <!-- TailwindCSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  
+
   <!-- Choices.js for searchable dropdown -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start py-10">
+<body class="bg-gray-100 min-h-screen flex flex-col items-center py-10">
 
-<!-- LOGIN SCREEN -->
-<div id="loginScreen" class="w-full max-w-md bg-white p-6 rounded-lg shadow-lg">
-  <h2 class="text-2xl font-bold mb-4 text-center">Login</h2>
-  <input type="email" id="email" placeholder="Enter your email" class="w-full p-2 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400">
-  <button class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition" onclick="login()">Login</button>
-  <p id="loginStatus" class="mt-2 text-center text-sm text-red-500"></p>
+<!-- STATUS / LOADING -->
+<div id="loadingScreen" class="w-full max-w-md bg-white p-6 rounded-lg shadow-lg text-center">
+  <p class="text-lg font-semibold">Loading user info...</p>
 </div>
 
 <!-- APP SCREEN -->
-<div id="appScreen" class="hidden w-full max-w-3xl">
+<div id="appScreen" class="hidden w-full max-w-3xl space-y-6">
 
-  <p id="welcome" class="mb-4 text-center font-semibold text-lg"></p>
+  <p id="welcome" class="text-center font-semibold text-lg"></p>
 
   <!-- REGISTRATION FORM (admin only) -->
-  <div id="regFormContainer" class="bg-white p-6 rounded-lg shadow-lg mb-6 hidden">
+  <div id="regFormContainer" class="bg-white p-6 rounded-lg shadow-lg hidden">
     <h2 class="text-xl font-bold mb-4 text-center">Register Patient</h2>
     <form id="regForm" class="space-y-3" onsubmit="event.preventDefault(); registerPatient();">
       <input class="input-field" type="text" id="national_id" placeholder="National ID *" required>
@@ -68,10 +65,14 @@
       <p id="visitStatus" class="text-center mt-2 text-sm"></p>
     </form>
   </div>
+
+  <div class="text-center mt-4">
+    <button onclick="logout()" class="text-red-600 hover:underline">Logout</button>
+  </div>
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbzUWmegnOFm4foJzs3QlHpBcWc_Ptu_Cxz-ev2nQPxVVqbjKWdvOXD1hMo9EQcXZ3gk/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxmcWZi7YlMySKKbBhKkhUh3Ynj1LuVMV0o7YlgcTCrp8AA4pDypJs4XZWWi2dLn7Mq/exec";
 let currentUser = null;
 let patientChoices = null;
 let db;
@@ -89,29 +90,35 @@ function initDB() {
   request.onerror = e => console.error("IndexedDB error", e);
 }
 
-// LOGIN
+// AUTO LOGIN on page load
 async function login() {
-  const email = document.getElementById("email").value.trim();
-  if (!email) return;
   try {
-    const res = await fetch(`${API_URL}?action=getUser&email=${email}`);
+    const res = await fetch(`${API_URL}?action=getUser`);
     const data = await res.json();
+
     if (!data || data.active !== "YES") {
-      document.getElementById("loginStatus").innerText = "Access denied or inactive user";
+      document.getElementById("loadingScreen").innerHTML = "<p class='text-red-500 font-semibold'>Access denied or inactive user</p>";
       return;
     }
+
     currentUser = data;
-    document.getElementById("loginScreen").classList.add("hidden");
+    document.getElementById("loadingScreen").classList.add("hidden");
     document.getElementById("appScreen").classList.remove("hidden");
     document.getElementById("welcome").innerText = `Welcome, ${data.email} (${data.role})`;
 
     if (data.role === "admin") document.getElementById("regFormContainer").classList.remove("hidden");
+
     await loadPatients();
     initDB();
   } catch (err) {
-    document.getElementById("loginStatus").innerText = "Error connecting to server";
+    document.getElementById("loadingScreen").innerHTML = "<p class='text-red-500 font-semibold'>Error connecting to server</p>";
     console.error(err);
   }
+}
+
+// LOGOUT
+function logout() {
+  location.reload();
 }
 
 // LOAD PATIENTS
@@ -168,7 +175,6 @@ async function saveVisit() {
     next_visit_date: next_visit_date.value
   };
   if (navigator.onLine) {
-    // online
     try {
       const res = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
       const data = await res.json();
@@ -206,6 +212,9 @@ function syncOfflineVisits() {
 
 // SYNC WHEN BACK ONLINE
 window.addEventListener("online", syncOfflineVisits);
+
+// Start login automatically
+window.addEventListener("load", login);
 </script>
 
 <style>
